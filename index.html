@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Survival Challenge: Save the Leadbeater’s Possum!</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      color: #2e7d32;
+    }
+    .question {
+      margin-top: 30px;
+    }
+    .progress {
+      font-weight: bold;
+      font-size: 1.1em;
+      color: #555;
+    }
+    button {
+      display: block;
+      margin: 10px 0;
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1em;
+      transition: background-color 0.3s ease;
+    }
+    button:hover:not(:disabled) {
+      background-color: #45a049;
+    }
+    button:disabled {
+      background-color: #a0a0a0 !important;
+      cursor: default;
+      color: #eee;
+    }
+    #result {
+      font-size: 1.4em;
+      margin-top: 30px;
+      font-weight: bold;
+      white-space: pre-line;
+    }
+    #population {
+      font-size: 1.2em;
+      margin-top: 10px;
+      color: #2e7d32;
+    }
+    #feedback {
+      margin-top: 15px;
+      font-style: italic;
+      color: #555;
+      background: #e0f2f1;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌲 Survival Challenge: Save the Leadbeater’s Possum!</h1>
+  <div id="population">Population estimate: 1000</div>
+  <div id="progress" class="progress"></div>
+  <div id="game"></div>
+  <div id="feedback"></div>
+  <div id="result"></div>
+
+  <script>
+    const gameData = [
+      {
+        question: "Your population has dropped below 2,500 individuals. Logging and bushfires have destroyed much of your habitat. What do you do first?",
+        options: [
+          {
+            text: "Start a public awareness campaign",
+            change: -100,
+            feedback: "Raising awareness helps, but habitat damage continues if restoration isn’t prioritized."
+          },
+          {
+            text: "Launch a large-scale habitat restoration project",
+            change: 200,
+            feedback: "Great choice! Restoring habitat directly supports possum survival and growth."
+          }
+        ]
+      },
+      {
+        question: "A bushfire has broken out near one of the remaining habitats. What do you do?",
+        options: [
+          {
+            text: "Evacuate and protect a small group of possums",
+            change: 50,
+            feedback: "Saving some possums helps immediately, but the habitat still needs protection."
+          },
+          {
+            text: "Focus on defending the habitat with firebreaks",
+            change: 100,
+            feedback: "Protecting the habitat reduces future damage and benefits more possums long-term."
+          }
+        ]
+      },
+      {
+        question: "Feral cats are preying on the possums. What strategy do you use?",
+        options: [
+          {
+            text: "Trap and relocate the cats",
+            change: 50,
+            feedback: "Trapping cats reduces immediate threats, but some may return if not fenced."
+          },
+          {
+            text: "Build cat-proof fencing around habitat zones",
+            change: 100,
+            feedback: "Fencing keeps possums safer by preventing cat access to their homes."
+          }
+        ]
+      },
+      {
+        question: "You’ve received $100,000 in emergency funding. Where do you spend it?",
+        options: [
+          {
+            text: "Expand fenced safe zones",
+            change: 150,
+            feedback: "Expanding safe zones creates more protected space for possums to thrive."
+          },
+          {
+            text: "Fund a breeding program in captivity",
+            change: 100,
+            feedback: "Captive breeding helps increase numbers, but wild habitat remains essential."
+          }
+        ]
+      },
+      {
+        question: "Illegal logging is damaging key possum trees. What’s your response?",
+        options: [
+          {
+            text: "Report to authorities and increase patrols",
+            change: 100,
+            feedback: "Increased enforcement helps protect vital habitats."
+          },
+          {
+            text: "Plant more trees in other areas",
+            change: 50,
+            feedback: "Planting helps but doesn’t stop ongoing damage immediately."
+          }
+        ]
+      },
+      {
+        question: "Tourists are disturbing possum habitats at night. What do you do?",
+        options: [
+          {
+            text: "Install signs and educate visitors",
+            change: 50,
+            feedback: "Education can reduce disturbance but may take time."
+          },
+          {
+            text: "Restrict access to sensitive areas at night",
+            change: 100,
+            feedback: "Limiting access protects possums from stress and harm."
+          }
+        ]
+      },
+      {
+        question: "Leadbeater’s Possum relies on old-growth trees for nesting. What’s your priority?",
+        options: [
+          {
+            text: "Preserve remaining old-growth forests",
+            change: 200,
+            feedback: "Protecting old trees maintains natural homes for possums."
+          },
+          {
+            text: "Plant fast-growing young trees",
+            change: 50,
+            feedback: "Young trees help future habitat but don’t provide immediate shelter."
+          }
+        ]
+      },
+      {
+        question: "Climate change is causing hotter, drier summers. What action helps possums adapt?",
+        options: [
+          {
+            text: "Create artificial nesting boxes",
+            change: 100,
+            feedback: "Nesting boxes offer shelter when natural ones are scarce."
+          },
+          {
+            text: "Focus on planting drought-resistant plants",
+            change: 50,
+            feedback: "Supporting the ecosystem helps, but possums need shelter too."
+          }
+        ]
+      },
+      {
+        question: "You discover invasive plants are crowding out native vegetation. What do you do?",
+        options: [
+          {
+            text: "Organize community weed removal days",
+            change: 100,
+            feedback: "Removing invasive plants restores possum food sources."
+          },
+          {
+            text: "Introduce new animals that eat invasive plants",
+            change: -50,
+            feedback: "New animals can cause unexpected problems if not carefully managed."
+          }
+        ]
+      },
+      {
+        question: "Poaching of possums is increasing. How do you respond?",
+        options: [
+          {
+            text: "Increase ranger patrols and surveillance",
+            change: 100,
+            feedback: "More patrols reduce poaching risks."
+          },
+          {
+            text: "Start a social media campaign against poaching",
+            change: 50,
+            feedback: "Raising awareness is helpful but slower to impact."
+          }
+        ]
+      },
+      {
+        question: "Scientists suggest breeding possums with related species to increase numbers. What’s your take?",
+        options: [
+          {
+            text: "Focus only on pure Leadbeater’s Possums",
+            change: 50,
+            feedback: "Maintains species integrity but slower population growth."
+          },
+          {
+            text: "Try cross-breeding to boost numbers quickly",
+            change: -50,
+            feedback: "Cross-breeding risks harming the species’ unique traits."
+          }
+        ]
+      },
+      {
+        question: "You want to involve the local community in conservation. How?",
+        options: [
+          {
+            text: "Host workshops and citizen science projects",
+            change: 100,
+            feedback: "Community involvement builds support and knowledge."
+          },
+          {
+            text: "Create a volunteer ranger program",
+            change: 150,
+            feedback: "Volunteers can provide hands-on help protecting habitats."
+          }
+        ]
+      },
+      {
+        question: "A nearby dam project threatens to flood possum habitats. What’s your action?",
+        options: [
+          {
+            text: "Campaign to stop or relocate the dam",
+            change: 150,
+            feedback: "Protecting habitat from flooding is vital for survival."
+          },
+          {
+            text: "Help possums relocate to safer areas",
+            change: 50,
+            feedback: "Relocation helps but isn’t ideal long term."
+          }
+        ]
+      },
+      {
+        question: "You notice that some trees have been infected by a fungal disease. What do you do?",
+        options: [
+          {
+            text: "Remove infected trees to prevent spread",
+            change: 100,
+            feedback: "Removing disease stops further damage."
+          },
+          {
+            text: "Research treatments and monitor trees",
+            change: 50,
+            feedback: "Research helps future protection but takes time."
+          }
+        ]
+      },
+      {
+        question: "The government offers funding to create a wildlife corridor. Do you accept?",
+        options: [
+          {
+            text: "Yes, connect fragmented habitats",
+            change: 200,
+            feedback: "Corridors help possums move safely and increase genetic diversity."
+          },
+          {
+            text: "No, focus on protecting current habitats",
+            change: 50,
+            feedback: "Protecting current areas is good but corridors provide long-term benefits."
+          }
+        ]
+      },
+      {
+        question: "You want to educate children about Leadbeater’s Possum. How?",
+        options: [
+          {
+            text: "Create school programs and nature walks",
+            change: 100,
+            feedback: "Teaching kids builds future conservation champions."
+          },
+          {
+            text: "Develop an online game about possum conservation",
+            change: 150,
+            feedback: "Interactive games engage children in a fun way."
+          }
+        ]
+      },
+      {
+        question: "A new invasive insect is damaging possum food plants. What’s your approach?",
+        options: [
+          {
+            text: "Introduce natural predators to control insects",
+            change: 100,
+            feedback: "Natural predators help control pests without chemicals."
+          },
+          {
+            text: "Use pesticides carefully in possum habitats",
+            change: -50,
+            feedback: "Pesticides can harm possums if not used cautiously."
+          }
+        ]
+      },
+      {
+        question: "You want to track possum populations more accurately. How?",
+        options: [
+          {
+            text: "Use camera traps and field surveys",
+            change: 100,
+            feedback: "Technology helps monitor populations effectively."
+          },
+          {
+            text: "Rely on occasional reports from locals",
+            change: 50,
+            feedback: "Community reports help but are less consistent."
+          }
+        ]
+      },
+      {
+        question: "A drought threatens possum water sources. What’s your response?",
+        options: [
+          {
+            text: "Install water stations in key habitats",
+            change: 150,
+            feedback: "Water stations help possums survive dry spells."
+          },
+          {
+            text: "Focus on planting drought-resistant plants",
+            change: 50,
+            feedback: "Planting helps ecosystem resilience but takes time."
+          }
+        ]
+      },
+      {
+        question: "You want to reduce human impact on possum habitats. What’s your best move?",
+        options: [
+          {
+            text: "Create protected conservation zones",
+            change: 200,
+            feedback: "Protected zones limit harmful human activities."
+          },
+          {
+            text: "Encourage eco-tourism with strict rules",
+            change: 100,
+            feedback: "Eco-tourism raises funds but needs careful management."
+          }
+        ]
+      }
+    ];
+
+    let currentStep = 0;
+    let population = 1000;
+
+    const gameDiv = document.getElementById('game');
+    const resultDiv = document.getElementById('result');
+    const populationDiv = document.getElementById('population');
+    const feedbackDiv = document.getElementById('feedback');
+    const progressDiv = document.getElementById('progress');
+
+    function updatePopulation(change) {
+      population += change;
+      if (population < 0) population = 0;
+      populationDiv.textContent = `Population estimate: ${population}`;
+    }
+
+    function showQuestion() {
+      feedbackDiv.textContent = '';
+      resultDiv.textContent = '';
+      if (currentStep < gameData.length) {
+        const step = gameData[currentStep];
+        gameDiv.innerHTML = '';
+
+        // Show progress like "Question 2 / 19"
+        progressDiv.textContent = `Question ${currentStep + 1} / ${gameData.length}`;
+
+        const qElem = document.createElement('div');
+        qElem.classList.add('question');
+
+        const prompt = document.createElement('p');
+        prompt.textContent = step.question;
+        qElem.appendChild(prompt);
+
+        step.options.forEach((opt, index) => {
+          const btn = document.createElement('button');
+          btn.textContent = opt.text;
+          btn.onclick = () => {
+            // Disable all buttons and grey them out
+            const buttons = gameDiv.querySelectorAll('button');
+            buttons.forEach(b => {
+              b.disabled = true;
+            });
+
+            updatePopulation(opt.change);
+            feedbackDiv.textContent = opt.feedback;
+
+            // Wait 2.5 seconds then next question
+            setTimeout(() => {
+              currentStep++;
+              showQuestion();
+            }, 2500);
+          };
+          qElem.appendChild(btn);
+        });
+
+        gameDiv.appendChild(qElem);
+      } else {
+        // End of quiz
+        gameDiv.innerHTML = '';
+        feedbackDiv.textContent = '';
+        progressDiv.textContent = '';
+        let message = `Final possum population estimate: ${population}\n\n`;
+        if (population >= 2500) {
+          message += "🎉 Success! The Leadbeater’s Possum has a real chance to recover!";
+        } else if (population >= 1000) {
+          message += "🙂 You're on the right path, but more effort is needed.";
+        } else {
+          message += "⚠️ Unfortunately, the population is too low. The species is still at serious risk.";
+        }
+        resultDiv.textContent = message;
+
+        // Add restart button
+        const restartBtn = document.createElement('button');
+        restartBtn.textContent = "Restart Quiz";
+        restartBtn.onclick = () => {
+          currentStep = 0;
+          population = 1000;
+          populationDiv.textContent = `Population estimate: ${population}`;
+          resultDiv.textContent = '';
+          showQuestion();
+        };
+        gameDiv.appendChild(restartBtn);
+      }
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
